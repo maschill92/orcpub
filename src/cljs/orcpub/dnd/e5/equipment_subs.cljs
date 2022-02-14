@@ -304,6 +304,7 @@
        classes
        feats
        language-map] _]
+  ;;  (js-debugger)
    (t5e/template-selections magic-weapon-options
                             magic-armor-options
                             other-magic-item-options
@@ -321,4 +322,5 @@
  ::char5e/template
  :<- [::char5e/template-selections]
  (fn [template-selections _]
+  ;;  (js-debugger)
    (t5e/template template-selections)))

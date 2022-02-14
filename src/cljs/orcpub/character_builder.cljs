@@ -595,6 +595,7 @@
     (fn [{:keys [title path parent-title name icon help max min remaining body hide-lock? hide-homebrew?]}]
       (let [locked? @(subscribe [:locked path])
             homebrew? @(subscribe [:homebrew? path])]
+        ;; (js-debugger)
         [:div.p-5.m-b-20.m-b-0-last
          (if (and (or title name) parent-title)
            (selection-section-parent-title parent-title))
@@ -760,6 +761,7 @@
          num-columns
          remaining
          hide-homebrew?)]
+    ;; (js-debugger)
     [selection-section-base data]))
 
 (defn set-abilities! [abilities]
@@ -1647,6 +1649,7 @@
         combined-selections (entity/combine-selections selections)
         final-selections combined-selections]
     (if print-enabled? (js/console.log "FINAL SELECTIONS" final-selections))
+    ;; (js-debugger)
     [:div.w-100-p
      [:div#options-column.b-1.b-rad-5
       [section-tabs available-selections built-template character page-index]
@@ -1720,6 +1723,7 @@
          (when (seq non-ui-fn-selections)
            [:div.m-t-20
             (let [sorted-selections (into (sorted-set-by compare-selections) non-ui-fn-selections)]
+              ;; (js-debugger)
               (doall
                (map
                 (fn [{:keys [::t/min ::t/max ::t/show-if-zero?] :as selection}]
@@ -1737,6 +1741,7 @@
                              selection
                              num-columns
                              remaining)])))
+                ;; (js-debugger)
                 sorted-selections)))])])]]))
 
 (def image-style

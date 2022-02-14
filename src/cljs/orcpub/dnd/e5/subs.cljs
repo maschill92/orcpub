@@ -207,6 +207,7 @@
  :<- [:built-character]
  :<- [:built-template]
  (fn [[character built-character built-template]]
+    (js-debugger)
    (entity/available-selections character built-character built-template)))
 
 (reg-sub
@@ -275,6 +276,7 @@
    (built-template template selected-plugin-options)))
 
 (defn built-character [character built-template]
+  ;; (js-debugger)
   (entity/build character built-template))
 
 (reg-sub
@@ -282,7 +284,10 @@
  :<- [:character]
  :<- [:built-template]
  (fn [[character built-template] _]
-   (built-character character built-template)))
+   (let [built-character (built-character character built-template)]
+    ;;  (js-debugger)
+     built-character)
+   ))
 
 (reg-sub
  :expanded-characters
@@ -458,6 +463,7 @@
 #_(reg-sub
  ::char5e/template
  (fn [db _]
+  ;;  (js-debugger)
    (:template db)))
 
 (reg-sub

@@ -302,6 +302,7 @@
 
 (defn level-selection [class-key selection-map {:keys [type num]}]
   (let [{:keys [name options]} (selection-map type)]
+    (js-debugger)
     (t/selection-cfg
      {:name name
       :key type

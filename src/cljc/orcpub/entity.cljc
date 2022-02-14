@@ -117,7 +117,7 @@
                                  (and (coll? %)
                                       (empty? %)))))
                    v))
-                 
+
                  (map? v) (remove-empty-fields v)
                  :else v)]))
          (remove
@@ -142,8 +142,8 @@
     true remove-empty-fields))
 
 (spec/fdef to-strict
-           :args (spec/cat :entity ::raw-entity)
-           :ret ::strict/entity)
+  :args (spec/cat :entity ::raw-entity)
+  :ret ::strict/entity)
 
 (declare from-strict-selections)
 
@@ -213,14 +213,14 @@
 (defn from-strict [{:keys [:db/id ::strict/selections ::strict/values ::strict/owner] :as strict-entity}]
   (let [homebrew-paths (selections-homebrew-paths selections [])]
     (cond-> {::options (from-strict-selections selections)}
-      (seq homebrew-paths) (assoc ::homebrew-paths homebrew-paths) 
+      (seq homebrew-paths) (assoc ::homebrew-paths homebrew-paths)
       id (assoc :db/id id)
       values (assoc ::values values)
       owner (assoc ::owner owner))))
 
 (spec/fdef from-strict
-           :args (spec/cat :entity ::strict/entity)
-           :ret ::raw-entity)
+  :args (spec/cat :entity ::strict/entity)
+  :ret ::raw-entity)
 
 ;;============== topo sort ===============
 
@@ -254,14 +254,14 @@
    algorithm, where g is a map of nodes to sets of nodes. If g is
    cyclic, returns nil."
   ([g]
-     (kahn-sort (normalize g) [] (no-incoming g)))
+   (kahn-sort (normalize g) [] (no-incoming g)))
   ([g l s]
-     (if (empty? s)
-       (when (every? empty? (vals g)) l)
-       (let [[n s'] (take-1 s)
-             m (g n)
-             g' (reduce #(update-in % [n] without %2) g m)]
-         (recur g' (conj l n) (union s' (intersection (no-incoming g') m)))))))
+   (if (empty? s)
+     (when (every? empty? (vals g)) l)
+     (let [[n s'] (take-1 s)
+           m (g n)
+           g' (reduce #(update-in % [n] without %2) g m)]
+       (recur g' (conj l n) (union s' (intersection (no-incoming g') m)))))))
 
 ;;==========================================
 
@@ -442,6 +442,9 @@
 
 (defn add-child-paths [path ref children]
   (map
+   ;; an option or selection?
+   ;; adds a :path key to the option or selection where the :path will contain the parent's path + the items path
+   ;; for example the "subrace" selection for the elf race will create a path that looks like this: ['race', 'elf', 'subrace']
    (fn [child]
      (assoc child
             ::path
@@ -451,30 +454,60 @@
    children))
 
 (defn get-all-selections-aux-2 [template selected-option-paths]
+  ;; current is the current selection OR OPTION, r is the rest of them
+  ;; const [current, ...r] = template;
   (loop [[current & r] [template]
+         ;; set containing what?
          used-ref-option-paths #{}
+         ;; final list of selections
          accum-selections []]
     (if current
+      ;; selections (if current is an option), the, it's path, and it's ref
       (let [{:keys [::t/selections ::path ::t/ref]} current
+            ;; get the options from the current selection
             options (selection-options current)
+            ;; whether or not this is a selection, if options exists, it's a selection
             selection? options
+            ;; the children "current"
             children (or selections options)
+            ;; inject path information into this items children
             children-with-paths (add-child-paths path ref children)
+            ;; these are the children that will be provided for processing in the next loop
             active-children (filter
+                             ;; keep the children for looping IF
                              (fn [{:keys [::path]}]
-                               (or (= current template)
-                                   (not selection?)
-                                   (and (get-in selected-option-paths path)
-                                        (not (used-ref-option-paths path)))))
+                               (or
+                                ;; current item is the root template (how could this happen?)
+                                (= current template)
+                                ;; OR if the current item is an option
+                                (not selection?)
+                                ;; OR
+                                (and
+                                 ;; the user entity contains this path (the user has picked it)
+                                 (get-in selected-option-paths path)
+                                 ;; AND this child has not already been processed (how could this happen?)
+                                 (not (used-ref-option-paths path)))))
                              children-with-paths)
+            ;; children have already all had their paths created, so extract them here
             active-children-paths (map ::path active-children)]
-        (recur (concat active-children r)
-               (if ref
-                 (union used-ref-option-paths (set active-children-paths))
-                 used-ref-option-paths)
-               (if selection?
-                 (conj accum-selections current)
-                 accum-selections)))
+        ;; SUPER IMPORTANT AND CLEVER
+        ;; do the loop again, but this time take the active-chidren (options or selections) that should be
+        ;; processed and do those first, this is a depth-first tree processing
+        (recur
+         ;; provide more children to loop
+         (concat active-children r)
+
+         ;; ref is only on selections (seems, true, haven't 100% confirmed)
+         (if ref
+           ;; need to understand how "ref" is used seems like some sort of unique scope identitier?
+           (union used-ref-option-paths (set active-children-paths))
+           ;; otherwise, pass the current rep paths
+           used-ref-option-paths)
+         ;; if it's a selection
+         (if selection?
+           ;; merge the current item(selection) into the accumulated selections path has it has been selected or one of the character's options allows it be selected
+           (conj accum-selections current)
+           accum-selections)))
       accum-selections)))
 
 (defn remove-disqualified-selections [selections built-char]
@@ -689,9 +722,9 @@
     (build-template-aux plugins template)))
 
 (spec/fdef
- build
- :args (spec/cat :raw-entity ::raw-entity :modifier-map ::t/template)
- :ret any?)
+  build
+  :args (spec/cat :raw-entity ::raw-entity :modifier-map ::t/template)
+  :ret any?)
 
 (defn name-to-kw [name]
   (-> name
@@ -722,12 +755,12 @@
                          (count (if require-value?
                                   (filter (partial option-selected? require-value?) selected-options)
                                   selected-options))
-                         
+
                          (map? selected-options)
                          (if (option-selected? require-value? selected-options)
                            1
                            0)
-                         
+
                          :else 0)]
     (cond homebrew? 0
 
